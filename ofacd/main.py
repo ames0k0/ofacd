@@ -5,6 +5,15 @@ from typing import Callable
 from pathlib import Path
 
 
+class DirectoryStructure:
+  def __init__(self, root_path: str):
+    self.root_path = root_path
+  def add(self, *dirs):
+    pass
+  def create(self):
+    pass
+
+
 class Directory:
   def __init__(self, path: str) -> None:
     pass
