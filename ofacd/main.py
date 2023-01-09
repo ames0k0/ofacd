@@ -8,9 +8,31 @@ from pathlib import Path
 class DirectoryStructure:
   def __init__(self, root_path: str):
     self.root_path = root_path
-  def add(self, *dirs):
-    pass
-  def create(self):
+    self.dirs = []
+
+  def add(self, *dirs: tuple) -> None:
+    """Generating the parent and child `dirs` to `create()`
+
+    """
+    # XXX: `root/a/b` will be replaced with `root/a/b/c`
+    root_dir, *dirs = dirs
+    if dirs:
+      pass
+
+    prev_d = None
+
+    # 1. single
+    # next child
+    curr_path = None
+
+    for d in dirs:
+      if curr_path is None:
+        curr_path = d
+
+    if curr_path:
+      self.dirs.append(curr_path)
+
+  def create(self) -> None:
     pass
 
 
