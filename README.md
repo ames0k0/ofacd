@@ -4,10 +4,21 @@ Create a directory structre
 ```python
 from ofacd import DirectoryStructure
 
-ds = DirectoryStructure('root_directory')
+ds = DirectoryStructure('z_l0')
 ds.add((
 	'a_l1', ('b_l2', 'c_l2', ('d_l3', 'e_l3')),
 ))
+ds.add((((('f_l1',)))))
+
+# print(ds.dirs)
+# [
+# 	PosixPath('z_l0/a_l1/b_l2'),
+# 	PosixPath('z_l0/a_l1/c_l2/d_l3'),
+# 	PosixPath('z_l0/a_l1/c_l2/e_l3'),
+# 	PosixPath('z_l0/f_l1')
+# ]
+
+ds.create()
 ```
 
 Add rules to the directory

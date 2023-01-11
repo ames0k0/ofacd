@@ -11,7 +11,7 @@ class DirectoryStructure:
     self.root_dir = Path(root_dir)
     self.dirs = []
 
-  def add(self, dirs: tuple, parent_dir: Path | None = None) -> None:
+  def add(self, dirs: Iterable, parent_dir: Path | None = None) -> None:
     """Generating the parent and child `dirs` to `create()`
     """
     if parent_dir is None:
