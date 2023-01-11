@@ -34,7 +34,7 @@ class DirectoryStructure:
 
 class Directory:
   def __init__(self, path: str) -> None:
-    pass
+    self.path = path
   def fofs(self) -> Path:
     pass
 
@@ -47,12 +47,18 @@ class FOF:
 class Rule:
   """ Destination
   """
-  def __init__(self, src: Directory, dst: Directory) -> None:
-    self.src = src
-    self.dst = dst
+  def __init__(self, path: Directory) -> None:
+    self.path = path
+    self.dir_rules = tuple()
+    self.file_rules = tuple()
+    self.shared_rules = tuple()
 
-  def add(self, *args: Callable) -> None:
-    pass
+  def set_dir_rules(self, *rules: Callable) -> None:
+    self.dir_rules = rules
+  def set_file_rules(self, *rules: Callable) -> None:
+    self.file_rules = rules
+  def add(self, *rules: Callable) -> None:
+    self.shared_rules.extend(rules)
 
-  def execute(self, fof: Path):
+  def execute(self):
     pass

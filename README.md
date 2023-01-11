@@ -21,16 +21,17 @@ ds.add((((('f_l1',)))))
 ds.create()
 ```
 
-Add rules to the directory
+Add rules to the directory, rules will affect directories and files in it
 ```python
 from ofacd import Directory, Rule
 
 src_path = Directory(src_path)
-dst_path = Directory(dst_path)
-rule = Rule(src_path, dst_path)
+rule = Rule(src_path)
+
+rule.set_dir_rules(lambda x: x.title())
+rule.set_file_rules(lambda x: x.lower())
 
 rule.add(lambda x: x.replace('_', '__'))
 
-for fof in a.fofs:
-	r.execute(fof)
+rule.execute()
 ```
