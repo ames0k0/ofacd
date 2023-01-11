@@ -1,39 +1,35 @@
 #/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from typing import Callable
+import os
+from typing import Callable, Iterable
 from pathlib import Path
 
 
 class DirectoryStructure:
-  def __init__(self, root_path: str):
-    self.root_path = root_path
+  def __init__(self, root_dir: str):
+    self.root_dir = Path(root_dir)
     self.dirs = []
 
-  def add(self, *dirs: tuple) -> None:
+  def add(self, dirs: tuple, parent_dir: Path | None = None) -> None:
     """Generating the parent and child `dirs` to `create()`
-
     """
-    # XXX: `root/a/b` will be replaced with `root/a/b/c`
-    root_dir, *dirs = dirs
-    if dirs:
-      pass
-
-    prev_d = None
-
-    # 1. single
-    # next child
-    curr_path = None
-
-    for d in dirs:
-      if curr_path is None:
-        curr_path = d
-
-    if curr_path:
-      self.dirs.append(curr_path)
+    if parent_dir is None:
+      parent_dir = self.root_dir
+    if not dirs:
+      self.dirs.append(parent_dir)
+    for parent in dirs:
+      if not isinstance(parent, str):
+        # `root/a/b` will be replaced with `root/a/b/c`
+        self.add(parent, self.dirs.pop())
+        continue
+      self.dirs.append(parent_dir / parent)
 
   def create(self) -> None:
-    pass
+    """Super-mkdir; create a leaf directory and all intermediate ones
+    """
+    for child_dir in self.dirs:
+      os.makedirs(child_dir, exist_ok=True)
 
 
 class Directory:
