@@ -45,7 +45,7 @@ class FOF:
 
 
 class Rule:
-  """ Destination
+  """Rules to the directories and files
   """
   def __init__(self, path: Directory) -> None:
     self.path = path
@@ -54,11 +54,44 @@ class Rule:
     self.shared_rules = tuple()
 
   def set_dir_rules(self, *rules: Callable) -> None:
+    """Directory specific rules
+    """
     self.dir_rules = rules
+
   def set_file_rules(self, *rules: Callable) -> None:
+    """File specific rules
+    """
     self.file_rules = rules
+
   def add(self, *rules: Callable) -> None:
+    """Rules for both, directories and files
+    """
     self.shared_rules.extend(rules)
 
-  def execute(self):
-    pass
+  def execute(
+      self, exec_path: Path | None = None, recursive: bool = True
+  ) -> None:
+    """Executes the rules, for files, for directories and for both
+    """
+    if exec_path is None:
+      exec_path = self.path
+
+    if not exec_path.exists():
+      return None
+
+    if exec_path.isfile():
+      for fr in self.file_rules:
+        exec_path = fr(exec_path)
+
+    if exec_path.isdir():
+      for dr in self.dir_rules:
+        exec_path = dr(exec_path)
+
+    for sr in self.shared_rules:
+      exec_path = sr(exec_path)
+
+    if not recursive:
+      return None
+
+    for child in exec_path.iterdirs():
+      self.execute(child, recursive)
