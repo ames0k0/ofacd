@@ -23,10 +23,9 @@ ds.create()
 
 Add rules to the directory, rules will affect directories and files in it
 ```python
-from ofacd import Directory, Rule
+from ofacd import Rule
 
-src_path = Directory(src_path)
-rule = Rule(src_path)
+rule = Rule(path='.')
 
 rule.set_dir_rules(lambda x: x.title())
 rule.set_file_rules(lambda x: x.lower())
