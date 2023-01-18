@@ -6,32 +6,17 @@ from typing import Callable, Iterable
 from pathlib import Path
 
 
-__all__ = (
-  'Directory', 'File', 'DirectoryStructure',
-)
-
-
-class Directory(Path):
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-
-
-class File(Path):
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-
-
 class DirectoryStructure:
   """Creating a directory structure from iterable directory names
 
   Not validating the given `ds` to `add()`, don't test it
   """
   def __init__(self, root_dir: str):
-    self.root_dir = Directory(root_dir)
+    self.root_dir = Path(root_dir)
     self.dirs = []
 
   def add(
-      self, dirs: Iterable[str | Iterable[str]], parent_dir: Directory
+      self, dirs: Iterable[str | Iterable[str]], parent_dir: Path
   ) -> None:
     """Generating the parent and child `dirs` to `create()`
     """
@@ -53,12 +38,11 @@ class DirectoryStructure:
       os.makedirs(child_dir, exist_ok=True)
 
 
-
 class Rule:
   """Rules to the directories and files
   """
-  def __init__(self, path: Directory) -> None:
-    self.path = path
+  def __init__(self, path: str) -> None:
+    self.path = Path(path)
     self.dir_rules = tuple()
     self.file_rules = tuple()
     self.shared_rules = tuple()
@@ -79,7 +63,7 @@ class Rule:
     self.shared_rules.extend(rules)
 
   def execute(
-      self, exec_path: Directory | None = None, recursive: bool = True
+      self, exec_path: Path | None = None, recursive: bool = True
   ) -> None:
     """Executes the rules, for files, for directories and for both
     """
