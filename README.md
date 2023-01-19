@@ -29,7 +29,6 @@ rule = Rule(path='.')
 
 rule.set_dir_rules(lambda x: x.title())
 rule.set_file_rules(lambda x: x.lower())
-
 rule.add(lambda x: x.replace('_', '__'))
 
 rule.execute()

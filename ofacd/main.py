@@ -15,8 +15,9 @@ class DirectoryStructure:
     self.root_dir = Path(root_dir)
     self.dirs = []
 
-  def add(
-      self, dirs: Iterable[str | Iterable[str]], parent_dir: Path
+  def add(self,
+          dirs: Iterable[str | Iterable[str]],
+          parent_dir: Path | None = None
   ) -> None:
     """Generating the parent and child `dirs` to `create()`
     """
