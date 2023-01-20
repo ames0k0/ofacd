@@ -25,11 +25,18 @@ Add rules to the directory, rules will affect directories and files in it
 ```python
 from ofacd import Rule
 
+
 rule = Rule(path='.')
 
-rule.set_dir_rules(lambda x: x.title())
-rule.set_file_rules(lambda x: x.lower())
-rule.add(lambda x: x.replace('_', '__'))
+all_rules = {
+	'dir_<name>': (lambda x: x.title(),),
+	'file_<name>': (lambda x: x.lower(),),
+	'shared_<name>': (lambda x: x.replace('_', '__'),),
+	'finalyze_<name>': (lambda data: data,),
+}
+for rule_key, rules in all_rules.items():
+	rule.set_rule(rule_key, rules)
 
-rule.execute()
+rule.execute(rules_order=('dir_<name>', 'file_<name>', 'schared_<name>'))
+rule.finalyze()
 ```
