@@ -42,29 +42,33 @@ class DirectoryStructure:
 class Rule:
   """Rules to the directories and files
   """
+  __slots__ = ('path', 'rules')
+
   def __init__(self, path: str) -> None:
     self.path = Path(path)
-    self.dir_rules = tuple()
-    self.file_rules = tuple()
-    self.shared_rules = tuple()
+    self.rules = {'data': []}
 
-  def set_dir_rules(self, *rules: Callable) -> None:
-    """Directory specific rules
-    """
-    self.dir_rules = rules
+  def set_rules(self, key: str, rules: tuple[Callable]) -> None:
+    """Setting rules for directories and files
 
-  def set_file_rules(self, *rules: Callable) -> None:
-    """File specific rules
+    Keywords on naming rules: `file_`, `dir_`, `shared_`, `finalyze_`
+    Keyword to store results: `data`
     """
-    self.file_rules = rules
+    self.rules[key] = rules
 
-  def add(self, *rules: Callable) -> None:
-    """Rules for both, directories and files
-    """
-    self.shared_rules.extend(rules)
+  def fod(self, rule_key: str, exec_path: Path) -> bool:
+    if rule_key.startswith('shared_'):
+      return True
+    if rule_key.startswith('dir_') and exec_path.isdir():
+      return True
+    if rule_key.startswith('file_') and exec_path.isfile():
+      return True
+    return False
 
   def execute(
-      self, exec_path: Path | None = None, recursive: bool = True
+      self,
+      rules_order: tuple[str],
+      exec_path: Path | None = None, recursive: bool = True,
   ) -> None:
     """Executes the rules, for files, for directories and for both
     """
@@ -74,19 +78,36 @@ class Rule:
     if not exec_path.exists():
       return None
 
-    if exec_path.isfile():
-      for fr in self.file_rules:
-        exec_path = fr(exec_path)
+    for rule_key in rules_order:
+      if not fod:
+        continue
 
-    if exec_path.isdir():
-      for dr in self.dir_rules:
-        exec_path = dr(exec_path)
+      rules = self.rules[rule_key]['rules']
+      for rule in rules:
+        result = rule(exec_path)
 
-    for sr in self.shared_rules:
-      exec_path = sr(exec_path)
+        if result:
+          rules[rule_key]['data'].append(result)
 
     if not recursive:
       return None
 
     for child in exec_path.iterdirs():
-      self.execute(child, recursive)
+      self.execute(rules_order, child, recursive)
+
+  def finalyze(self) -> None:
+    """Processing the rules execution result (stored data)
+    """
+    data = self.rules['data']
+    if not data:
+      return None
+
+    rules = tuple()
+
+    for rule_key in self.rules.keys:
+      if rule_key.startswith('finalyze_'):
+        rules = self.rules[rule_key]['rules']
+        break
+
+    for rule in rules:
+      rule(data)
