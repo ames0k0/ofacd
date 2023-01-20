@@ -82,12 +82,12 @@ class Rule:
       if not fod:
         continue
 
-      rules = self.rules[rule_key]['rules']
+      rules = self.rules[rule_key]
       for rule in rules:
         result = rule(exec_path)
 
         if result:
-          rules[rule_key]['data'].append(result)
+          rules['data'].append(result)
 
     if not recursive:
       return None
@@ -106,7 +106,7 @@ class Rule:
 
     for rule_key in self.rules.keys:
       if rule_key.startswith('finalyze_'):
-        rules = self.rules[rule_key]['rules']
+        rules = self.rules[rule_key]
         break
 
     for rule in rules:
