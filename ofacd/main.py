@@ -92,7 +92,7 @@ class Rule:
     if not recursive:
       return None
 
-    for child in exec_path.iterdirs():
+    for child in exec_path.glob('*'):
       self.execute(rules_order, child, recursive)
 
   def finalyze(self) -> None:
