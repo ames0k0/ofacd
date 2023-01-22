@@ -40,3 +40,10 @@ for rule_key, rules in all_rules.items():
 rule.execute(rules_order=('dir_<name>', 'file_<name>', 'schared_<name>'))
 rule.finalyze()
 ```
+
+### Install
+```bash
+pip install ofacd
+# or
+pip install git+https://github.com/ames0k0/ofacd
+```
