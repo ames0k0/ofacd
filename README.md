@@ -33,3 +33,10 @@ rule.add(lambda x: x.replace('_', '__'))
 
 rule.execute()
 ```
+
+### Install
+```bash
+pip install ofacd
+# or
+pip install git+https://github.com/ames0k0/ofacd
+```
