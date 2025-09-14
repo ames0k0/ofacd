@@ -59,9 +59,9 @@ class Rule:
   def fod(self, rule_key: str, exec_path: Path) -> bool:
     if rule_key.startswith('shared_'):
       return True
-    if rule_key.startswith('dir_') and exec_path.isdir():
+    if rule_key.startswith('dir_') and exec_path.is_dir():
       return True
-    if rule_key.startswith('file_') and exec_path.isfile():
+    if rule_key.startswith('file_') and exec_path.is_file():
       return True
     return False
 
@@ -78,22 +78,24 @@ class Rule:
     if not exec_path.exists():
       return None
 
-    for rule_key in rules_order:
-      if not fod:
-        continue
-
-      rules = self.rules[rule_key]
-      for rule in rules:
-        result = rule(exec_path)
-
-        if result:
-          rules['data'].append(result)
-
-    if not recursive:
-      return None
-
     for child in exec_path.glob('*'):
-      self.execute(rules_order, child, recursive)
+      for rule_key in rules_order:
+        if not self.fod(rule_key=rule_key, exec_path=child):
+          continue
+
+        rules = self.rules[rule_key]
+        for rule in rules:
+          result = rule(child)
+
+          if result:
+            self.rules['data'].append(result)
+
+        if recursive and child.is_dir():
+          self.execute(
+            rules_order=rules_order,
+            exec_path=child,
+            recursive=recursive,
+          )
 
   def finalyze(self) -> None:
     """Processing the rules execution result (stored data)
@@ -104,7 +106,7 @@ class Rule:
 
     rules = tuple()
 
-    for rule_key in self.rules.keys:
+    for rule_key in self.rules:
       if rule_key.startswith('finalyze_'):
         rules = self.rules[rule_key]
         break
