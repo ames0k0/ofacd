@@ -1,4 +1,6 @@
-# ofacd - Organize files and clean directories
+# ofacd
+
+Organize files and clean directories
 
 > Create a directory structure
 ```python
@@ -21,10 +23,9 @@ ds.add((((('f_l1',)))))
 ds.create()
 ```
 
-> Add rules to the directory,<br />rules will affect directories and files in it
+> Add rules to the directory, rules will affect directories and files in it
 ```python
 from ofacd import Rule
-
 
 rule = Rule(path='.')
 

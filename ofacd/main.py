@@ -1,8 +1,7 @@
-#/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import os
-from typing import Callable, Iterable
+from typing import Callable
+from typing import Generator
+from typing import Iterable
 from pathlib import Path
 
 
@@ -65,10 +64,33 @@ class Rule:
       return True
     return False
 
+  @staticmethod
+  def _directory_tree_iterator(
+      *,
+      exec_path: Path,
+      recurcive: bool
+  ) -> Generator[Path, None, None]:
+    """Yields directory tree
+
+    Yileds absolute path to the files (and directories if recurcive)
+    """
+    if not recurcive:
+      for parent_dir, _, child_files in exec_path.walk():
+        for child_file in child_files:
+          yield parent_dir / child_file
+        return None
+    for parent_dir, _, child_files in exec_path.walk(top_down=False):
+      for child_file in child_files:
+        yield parent_dir / child_file
+      if parent_dir != exec_path:
+        yield parent_dir
+
   def execute(
       self,
+      *,
       rules_order: tuple[str],
-      exec_path: Path | None = None, recursive: bool = True,
+      exec_path: Path | None = None,
+      recursive: bool = False,
   ) -> None:
     """Executes the rules, for files, for directories and for both
     """
@@ -78,7 +100,10 @@ class Rule:
     if not exec_path.exists():
       return None
 
-    for child in exec_path.glob('*'):
+    for child in self._directory_tree_iterator(
+        exec_path=exec_path,
+        recurcive=recursive
+    ):
       for rule_key in rules_order:
         if not self.fod(rule_key=rule_key, exec_path=child):
           continue
@@ -89,13 +114,6 @@ class Rule:
 
           if result:
             self.rules['data'].append(result)
-
-        if recursive and child.is_dir():
-          self.execute(
-            rules_order=rules_order,
-            exec_path=child,
-            recursive=recursive,
-          )
 
   def finalyze(self) -> None:
     """Processing the rules execution result (stored data)
