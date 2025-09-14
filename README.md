@@ -1,6 +1,6 @@
 # ofacd - Organize files and clean directories
-> Create a directory tree and rules for files that will be moved to there
-Create a directory structre
+
+> Create a directory structure
 ```python
 from ofacd import DirectoryStructure
 
@@ -21,7 +21,7 @@ ds.add((((('f_l1',)))))
 ds.create()
 ```
 
-Add rules to the directory, rules will affect directories and files in it
+> Add rules to the directory,<br />rules will affect directories and files in it
 ```python
 from ofacd import Rule
 
@@ -35,7 +35,7 @@ all_rules = {
 	'finalyze_<name>': (lambda data: data,),
 }
 for rule_key, rules in all_rules.items():
-	rule.set_rule(rule_key, rules)
+	rule.set_rules(rule_key, rules)
 
 rule.execute(rules_order=('dir_<name>', 'file_<name>', 'schared_<name>'))
 rule.finalyze()
