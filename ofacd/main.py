@@ -2,6 +2,7 @@ import os
 from typing import Callable
 from typing import Generator
 from typing import Iterable
+from typing import Self
 from pathlib import Path
 
 
@@ -64,26 +65,41 @@ class Rule:
       return True
     return False
 
-  @staticmethod
   def _directory_tree_iterator(
+      self: Self,
       *,
       exec_path: Path,
-      recurcive: bool
+      recursive: bool,
   ) -> Generator[Path, None, None]:
     """Yields directory tree
 
-    Yileds absolute path to the files (and directories if recurcive)
+    Yileds absolute path to the files (and directories if recursive)
     """
-    if not recurcive:
-      for parent_dir, _, child_files in exec_path.walk():
-        for child_file in child_files:
-          yield parent_dir / child_file
-        return None
-    for parent_dir, _, child_files in exec_path.walk(top_down=False):
-      for child_file in child_files:
-        yield parent_dir / child_file
-      if parent_dir != exec_path:
-        yield parent_dir
+    root_dir, child_dirs, root_files = next(exec_path.walk())
+    # XXX (ames0k0): yields the `root_dir`, `child_dir` for a `recursive`
+    yield root_dir
+
+    # XXX (ames0k0): yields child directories
+    for child_dir in child_dirs:
+      child_dirpath = root_dir / child_dir
+      yield child_dirpath
+
+    # XXX (ames0k0): yields root files
+    for root_file in root_files:
+      root_filepath = root_dir / root_file
+      yield root_filepath
+
+    if not recursive:
+      return
+    for child_dir in child_dirs:
+      child_dirpath = root_dir / child_dir
+      # XXX (ames0k0): --quite
+      if not os.access(child_dirpath, os.R_OK):
+        continue
+      yield from self._directory_tree_iterator(
+        exec_path=child_dirpath,
+        recursive=recursive,
+      )
 
   def execute(
       self,
@@ -100,10 +116,11 @@ class Rule:
     if not exec_path.exists():
       return None
 
-    for child in self._directory_tree_iterator(
-        exec_path=exec_path,
-        recurcive=recursive
-    ):
+    dir_iterator = self._directory_tree_iterator(
+      exec_path=exec_path,
+      recursive=recursive
+    )
+    for child in dir_iterator:
       for rule_key in rules_order:
         if not self.fod(rule_key=rule_key, exec_path=child):
           continue
