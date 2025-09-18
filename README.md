@@ -27,7 +27,11 @@ ds.create()
 ```python
 from ofacd import Rule
 
-rule = Rule(path='.')
+rule = Rule(
+	path='.',
+	exclude_dirs=[".git", "__pycache__"],
+	exclude_files=["__init__.py"],
+)
 
 all_rules = {
 	'dir_<name>': (lambda x: x.title(),),
@@ -38,7 +42,9 @@ all_rules = {
 for rule_key, rules in all_rules.items():
 	rule.set_rules(rule_key, rules)
 
-rule.execute(rules_order=('dir_<name>', 'file_<name>', 'schared_<name>'))
+rule.execute(
+	rules_order=('dir_<name>', 'file_<name>', 'schared_<name>'),
+)
 rule.finalyze()
 ```
 

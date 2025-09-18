@@ -3,6 +3,7 @@ from typing import Callable
 from typing import Generator
 from typing import Iterable
 from typing import Self
+from typing import Sequence
 from pathlib import Path
 
 
@@ -42,11 +43,18 @@ class DirectoryStructure:
 class Rule:
   """Rules to the directories and files
   """
-  __slots__ = ('path', 'rules')
+  __slots__ = ('path', 'rules', 'exclude_dirs', 'exclude_files')
 
-  def __init__(self, path: str) -> None:
+  def __init__(
+      self: Self,
+      path: str,
+      exclude_dirs: Sequence[str] | None = None,
+      exclude_files: Sequence[str] | None = None,
+  ) -> None:
     self.path = Path(path)
     self.rules = {'data': []}
+    self.exclude_dirs = exclude_dirs or []
+    self.exclude_files = exclude_files or []
 
   def set_rules(self, key: str, rules: tuple[Callable]) -> None:
     """Setting rules for directories and files
@@ -78,6 +86,10 @@ class Rule:
     root_dir, child_dirs, root_files = next(exec_path.walk())
     # XXX (ames0k0): yields the `root_dir`, `child_dir` for a `recursive`
     yield root_dir
+
+    # XXX (ames0k0): excludes dirs and files
+    child_dirs = set(child_dirs).difference(self.exclude_dirs)
+    root_files = set(root_files).difference(self.exclude_files)
 
     # XXX (ames0k0): yields child directories
     for child_dir in child_dirs:
