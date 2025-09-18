@@ -1,8 +1,7 @@
-#/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import os
-from typing import Callable, Iterable
+from typing import Callable
+from typing import Generator
+from typing import Iterable
 from pathlib import Path
 
 
@@ -42,29 +41,56 @@ class DirectoryStructure:
 class Rule:
   """Rules to the directories and files
   """
+  __slots__ = ('path', 'rules')
+
   def __init__(self, path: str) -> None:
     self.path = Path(path)
-    self.dir_rules = tuple()
-    self.file_rules = tuple()
-    self.shared_rules = tuple()
+    self.rules = {'data': []}
 
-  def set_dir_rules(self, *rules: Callable) -> None:
-    """Directory specific rules
-    """
-    self.dir_rules = rules
+  def set_rules(self, key: str, rules: tuple[Callable]) -> None:
+    """Setting rules for directories and files
 
-  def set_file_rules(self, *rules: Callable) -> None:
-    """File specific rules
+    Keywords on naming rules: `file_`, `dir_`, `shared_`, `finalyze_`
+    Keyword to store results: `data`
     """
-    self.file_rules = rules
+    self.rules[key] = rules
 
-  def add(self, *rules: Callable) -> None:
-    """Rules for both, directories and files
+  def fod(self, rule_key: str, exec_path: Path) -> bool:
+    if rule_key.startswith('shared_'):
+      return True
+    if rule_key.startswith('dir_') and exec_path.is_dir():
+      return True
+    if rule_key.startswith('file_') and exec_path.is_file():
+      return True
+    return False
+
+  @staticmethod
+  def _directory_tree_iterator(
+      *,
+      exec_path: Path,
+      recurcive: bool
+  ) -> Generator[Path, None, None]:
+    """Yields directory tree
+
+    Yileds absolute path to the files (and directories if recurcive)
     """
-    self.shared_rules.extend(rules)
+    if not recurcive:
+      for parent_dir, _, child_files in exec_path.walk():
+        for child_file in child_files:
+          yield parent_dir / child_file
+        return None
+    for parent_dir, _, child_files in exec_path.walk(top_down=False):
+      for child_file in child_files:
+        yield parent_dir / child_file
+      if parent_dir != exec_path:
+        yield parent_dir
 
   def execute(
-      self, exec_path: Path | None = None, recursive: bool = True
+      self,
+      *,
+      rules_order: tuple[str],
+      exec_path: Path | None = None,
+      recursive: bool = False,
   ) -> None:
     """Executes the rules, for files, for directories and for both
     """
@@ -74,19 +100,34 @@ class Rule:
     if not exec_path.exists():
       return None
 
-    if exec_path.isfile():
-      for fr in self.file_rules:
-        exec_path = fr(exec_path)
+    for child in self._directory_tree_iterator(
+        exec_path=exec_path,
+        recurcive=recursive
+    ):
+      for rule_key in rules_order:
+        if not self.fod(rule_key=rule_key, exec_path=child):
+          continue
 
-    if exec_path.isdir():
-      for dr in self.dir_rules:
-        exec_path = dr(exec_path)
+        rules = self.rules[rule_key]
+        for rule in rules:
+          result = rule(child)
 
-    for sr in self.shared_rules:
-      exec_path = sr(exec_path)
+          if result:
+            self.rules['data'].append(result)
 
-    if not recursive:
+  def finalyze(self) -> None:
+    """Processing the rules execution result (stored data)
+    """
+    data = self.rules['data']
+    if not data:
       return None
 
-    for child in exec_path.iterdirs():
-      self.execute(child, recursive)
+    rules = tuple()
+
+    for rule_key in self.rules:
+      if rule_key.startswith('finalyze_'):
+        rules = self.rules[rule_key]
+        break
+
+    for rule in rules:
+      rule(data)
