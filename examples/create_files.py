@@ -25,10 +25,11 @@ importlib.import_module("ofacd")
 
 from ofacd.main import DirectoryStructure
 from ofacd.main import Rule
+from ofacd.main import CustomPath
 
 ROOT_DIR = "root"
 
-def create_files(dirpath: Path):
+def create_files(dirpath: CustomPath):
 	filepath = dirpath / "__init__.py"
 	filepath.touch(exist_ok=True)
 	return filepath

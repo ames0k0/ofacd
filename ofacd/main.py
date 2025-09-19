@@ -40,10 +40,19 @@ class DirectoryStructure:
       os.makedirs(child_dir, exist_ok=True)
 
 
+class CustomPath(Path):
+  """Mutable Path"""
+  RULE: "Rule"
+
+
 class Rule:
   """Rules to the directories and files
   """
-  __slots__ = ('path', 'rules', 'exclude_dirs', 'exclude_files')
+  __slots__ = (
+    'path', 'rules',
+    'exclude_dirs', 'exclude_files',
+    'curr_child_dirs',
+  )
 
   def __init__(
       self: Self,
@@ -51,10 +60,11 @@ class Rule:
       exclude_dirs: Sequence[str] | None = None,
       exclude_files: Sequence[str] | None = None,
   ) -> None:
-    self.path = Path(path)
+    self.path = CustomPath(path)
     self.rules = {'data': []}
     self.exclude_dirs = exclude_dirs or []
     self.exclude_files = exclude_files or []
+    self.curr_child_dirs: Sequence[str] | None = None
 
   def set_rules(self, key: str, rules: tuple[Callable]) -> None:
     """Setting rules for directories and files
@@ -64,7 +74,7 @@ class Rule:
     """
     self.rules[key] = rules
 
-  def fod(self, rule_key: str, exec_path: Path) -> bool:
+  def fod(self, rule_key: str, exec_path: CustomPath) -> bool:
     if rule_key.startswith('shared_'):
       return True
     if rule_key.startswith('dir_') and exec_path.is_dir():
@@ -82,29 +92,32 @@ class Rule:
     """Yields directory tree
 
     Yileds absolute path to the files (and directories if recursive)
+    Yield order: root_dir, child_dirs, root_files
     """
     root_dir, child_dirs, root_files = next(exec_path.walk())
-    # XXX (ames0k0): yields the `root_dir`, `child_dir` for a `recursive`
-    yield root_dir
-
     # XXX (ames0k0): excludes dirs and files
     child_dirs = set(child_dirs).difference(self.exclude_dirs)
     root_files = set(root_files).difference(self.exclude_files)
 
-    # XXX (ames0k0): yields child directories
+    # XXX (ames0k0): yields the `root_dir`, `child_dir` for a `recursive`
+    yield CustomPath(root_dir)
+
+    # XXX (ames0k0): Let a `rule` updated `child_dirs`
+    self.curr_child_dirs = child_dirs.copy()
+
     for child_dir in child_dirs:
       child_dirpath = root_dir / child_dir
-      yield child_dirpath
+      yield CustomPath(child_dirpath)
 
-    # XXX (ames0k0): yields root files
     for root_file in root_files:
-      root_filepath = root_dir / root_file
-      yield root_filepath
+      yield CustomPath(root_dir / root_file)
 
     if not recursive:
       return
-    for child_dir in child_dirs:
-      child_dirpath = root_dir / child_dir
+
+    # XXX (ames0k0): Iterate updated `child_dirs`
+    for child_dir in self.curr_child_dirs:
+      child_dirpath = CustomPath(root_dir / child_dir)
       # XXX (ames0k0): --quite
       if not os.access(child_dirpath, os.R_OK):
         continue
@@ -122,6 +135,7 @@ class Rule:
   ) -> None:
     """Executes the rules, for files, for directories and for both
     """
+    # XXX (ames0k0): What is it `exec_path` for ?!
     if exec_path is None:
       exec_path = self.path
 
@@ -133,6 +147,9 @@ class Rule:
       recursive=recursive
     )
     for child in dir_iterator:
+      # XXX (ames0k0): Pointer for a current state
+      setattr(child, "RULE", self)
+
       for rule_key in rules_order:
         if not self.fod(rule_key=rule_key, exec_path=child):
           continue
