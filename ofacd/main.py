@@ -107,22 +107,25 @@ class Rule:
 
     for child_dir in child_dirs:
       child_dirpath = root_dir / child_dir
+      # XXX (ames0k0): --quite
+      if not os.access(child_dirpath, os.R_OK):
+        self.curr_child_dirs.remove(child_dir)
+        continue
       yield CustomPath(child_dirpath)
 
     for root_file in root_files:
-      yield CustomPath(root_dir / root_file)
+      root_filepath = CustomPath(root_dir / root_file)
+      if not os.access(root_filepath, os.R_OK):
+        continue
+      yield root_filepath
 
     if not recursive:
       return
 
     # XXX (ames0k0): Iterate updated `child_dirs`
     for child_dir in self.curr_child_dirs:
-      child_dirpath = CustomPath(root_dir / child_dir)
-      # XXX (ames0k0): --quite
-      if not os.access(child_dirpath, os.R_OK):
-        continue
       yield from self._directory_tree_iterator(
-        exec_path=child_dirpath,
+        exec_path=CustomPath(root_dir / child_dir),
         recursive=recursive,
       )
 
